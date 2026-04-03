@@ -38,7 +38,7 @@ Wikipedia articles reference dozens of locations scattered through their text. W
 
 ## Demo
 
-> **Live demo:** [WikiAtlas.vercel.app](https://wikiatlas.vercel.app) *(coming soon)*
+> **Live demo:** [wikiatlas.vercel.app](https://wikiatlas.vercel.app) *(coming soon)*
 
 <!-- Remove this note once deployed -->
 
@@ -102,8 +102,8 @@ Cached in Redis — re-requesting the same article is instant.
 
 ```bash
 # Clone
-git clone https://github.com/your-username/WikiAtlas.git
-cd WikiAtlas
+git clone https://github.com/your-username/wikiatlas.git
+cd wikiatlas
 
 # Environment variables
 cp .env.example .env
@@ -115,7 +115,7 @@ cp .env.example .env
 
 ```env
 GEMINI_API_KEY=your_key_here
-DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/WikiAtlas
+DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/wikiatlas
 REDIS_URL=redis://localhost:6379/0
 ```
 
@@ -209,22 +209,11 @@ WikiAtlas/
 └── pyproject.toml                  # Python dependencies
 ```
 
-## Deployment
-
-See **[DEPLOYMENT.md](DEPLOYMENT.md)** for production deployment, including:
-
-- Docker images and production Compose config
-- **Free-tier hosting** — Vercel + Render + Neon + Upstash ($0/mo)
-- VPS deployment (Oracle Cloud Always Free)
-- Reverse proxy setup (Nginx / Caddy)
-- CI/CD with GitHub Actions
-- Monitoring and backup strategies
-
 ## Architecture Decisions
 
 | Decision    | Choice                  | Why                                            |
 |-------------|-------------------------|------------------------------------------------|
-| Frontend    | Next.js over Streamlit  | First-class maps, shareable URLs, SSR          |
+| Frontend    | Next.js | First-class maps, shareable URLs, SSR          |
 | LLM         | Gemini 2.5 Flash        | Free, native structured JSON output            |
 | Geocoder    | Nominatim               | Free, no API key, sufficient for MVP           |
 | Database    | PostgreSQL + PostGIS    | Spatial queries, great free managed tiers      |

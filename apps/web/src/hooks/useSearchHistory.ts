@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react'
 
-const STORAGE_KEY = 'wikimap:recent_searches'
+const STORAGE_KEY = 'wikiatlas:recent_searches'
 const MAX_ENTRIES = 20
 
 export interface SearchEntry {

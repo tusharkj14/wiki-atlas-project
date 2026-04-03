@@ -13,7 +13,7 @@ services:
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: wikimap
+      POSTGRES_DB: wikiatlas
     volumes:
       - pg_data:/var/lib/postgresql/data
 

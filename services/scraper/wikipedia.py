@@ -15,7 +15,7 @@ from bs4 import BeautifulSoup, Tag
 
 from lib.types.models import ScrapedArticle
 
-USER_AGENT = "WikiMap/1.0 (educational project; contact@example.com)"
+USER_AGENT = "WikiAtlas/1.0 (educational project; contact@example.com)"
 
 # Sections that never contain useful geographic content
 STRIP_SECTIONS = {

@@ -60,7 +60,7 @@ export default function Home() {
         </button>
         <div className="flex items-center gap-2 flex-shrink-0">
           <span className="text-xl" aria-hidden>🌍</span>
-          <span className="font-bold text-gray-900 text-lg tracking-tight">WikiMap</span>
+          <span className="font-bold text-gray-900 text-lg tracking-tight">WikiAtlas</span>
         </div>
         <WikiSearchBar onSubmit={submit} disabled={status === 'loading'} />
         {status === 'loading' && (

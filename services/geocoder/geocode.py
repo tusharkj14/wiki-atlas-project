@@ -15,7 +15,7 @@ from lib.types.models import GeoTag, GeocodedTag
 logger = logging.getLogger(__name__)
 
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
-USER_AGENT = "Mozilla/5.0 (compatible; WikiMap/1.0; +https://github.com/wikimap)"
+USER_AGENT = "Mozilla/5.0 (compatible; WikiAtlas/1.0; +https://github.com/wikiatlas)"
 
 # ISO 3166-1 alpha-2 country code lookup for Nominatim's countrycodes param.
 # Covers common countries; unknown names fall back to unbiased search.
@@ -80,7 +80,7 @@ async def geocode_place(place_name: str, country: str = "") -> Optional[tuple[fl
         "q": place_name,
         "format": "jsonv2",
         "limit": 1,
-        "email": "wikimap-project@example.com",
+        "email": "wikiatlas-project@example.com",
     }
 
     # Bias results to the expected country

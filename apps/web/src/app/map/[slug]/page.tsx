@@ -11,16 +11,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const data = await getBySlug(params.slug)
     return {
-      title: `${data.title} — WikiMap`,
-      description: `${data.total_geocoded} locations from "${data.title}" visualized on WikiMap.`,
+      title: `${data.title} — WikiAtlas`,
+      description: `${data.total_geocoded} locations from "${data.title}" visualized on WikiAtlas.`,
       openGraph: {
-        title: `${data.title} — WikiMap`,
+        title: `${data.title} — WikiAtlas`,
         description: `Explore ${data.total_geocoded} locations mentioned in the Wikipedia article for "${data.title}".`,
         type: 'website',
       },
     }
   } catch {
-    return { title: 'WikiMap' }
+    return { title: 'WikiAtlas' }
   }
 }
 
@@ -36,7 +36,7 @@ export default async function SlugPage({ params }: Props) {
         <div className="flex items-center gap-3 min-w-0">
           <a href="/" className="flex items-center gap-2 flex-shrink-0">
             <span className="text-xl" aria-hidden>🌍</span>
-            <span className="font-bold text-gray-900 text-lg tracking-tight">WikiMap</span>
+            <span className="font-bold text-gray-900 text-lg tracking-tight">WikiAtlas</span>
           </a>
           <span className="text-gray-200 hidden sm:inline">|</span>
           <a

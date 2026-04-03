@@ -5,7 +5,7 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'WikiMap — Visualize Wikipedia on a map',
+  title: 'WikiAtlas — Visualize Wikipedia on a map',
   description:
     'Search any Wikipedia article and see every mentioned location plotted on an interactive map.',
 }
