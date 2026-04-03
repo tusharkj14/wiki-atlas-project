@@ -1,0 +1,23 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+apps/web/node_modules/
+apps/web/.next/
+.claude/
+
+# Virtual environments
+.venv
+
+# env files
+.env
+
+# others
+*.doc
+*.docx
+*.python-version
+DEPLOYMENT.md
+FRONTEND_SPEC.md
