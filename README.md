@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="docs/logo.png" alt="WikiMap" width="80" />
+  <img src="docs/logo.png" alt="WikiAtlas" width="80" />
 </p>
 
-<h1 align="center">WikiMap</h1>
+<h1 align="center">WikiAtlas</h1>
 
 <p align="center">
   <strong>Visualize every location mentioned in any Wikipedia article on an interactive map.</strong>
@@ -27,18 +27,18 @@
 
 <!-- Replace with actual screenshot/GIF -->
 <p align="center">
-  <img src="docs/demo.gif" alt="WikiMap Demo" width="700" />
+  <img src="docs/demo.gif" alt="WikiAtlas Demo" width="700" />
 </p>
 
-## What is WikiMap?
+## What is WikiAtlas?
 
 Paste a Wikipedia URL and get an interactive map of every real-world location mentioned in the article — with context on *why* each place is relevant.
 
-Wikipedia articles reference dozens of locations scattered through their text. WikiMap extracts them automatically using an LLM, geocodes them, and plots them on a map you can explore and share.
+Wikipedia articles reference dozens of locations scattered through their text. WikiAtlas extracts them automatically using an LLM, geocodes them, and plots them on a map you can explore and share.
 
 ## Demo
 
-> **Live demo:** [wikimap.vercel.app](https://wikimap.vercel.app) *(coming soon)*
+> **Live demo:** [WikiAtlas.vercel.app](https://wikiatlas.vercel.app) *(coming soon)*
 
 <!-- Remove this note once deployed -->
 
@@ -102,8 +102,8 @@ Cached in Redis — re-requesting the same article is instant.
 
 ```bash
 # Clone
-git clone https://github.com/your-username/wikimap.git
-cd wikimap
+git clone https://github.com/your-username/WikiAtlas.git
+cd WikiAtlas
 
 # Environment variables
 cp .env.example .env
@@ -115,7 +115,7 @@ cp .env.example .env
 
 ```env
 GEMINI_API_KEY=your_key_here
-DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/wikimap
+DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/WikiAtlas
 REDIS_URL=redis://localhost:6379/0
 ```
 
@@ -183,7 +183,7 @@ Returns a GeoJSON FeatureCollection with all extracted locations, metadata, and 
 ## Project Structure
 
 ```
-wikimap/
+WikiAtlas/
 ├── apps/
 │   ├── api/                        # FastAPI backend
 │   │   ├── main.py                 # App factory, CORS, routers
