@@ -55,7 +55,10 @@ def create_app() -> FastAPI:
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:3000"],
+        allow_origins=[
+            "http://localhost:3000",
+            "https://wikiatlas.vercel.app",      # your Vercel URL
+        ],
         allow_methods=["*"],
         allow_headers=["*"],
     )
