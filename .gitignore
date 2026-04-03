@@ -21,3 +21,4 @@ apps/web/.next/
 *.python-version
 DEPLOYMENT.md
 FRONTEND_SPEC.md
+wikimap_prd.md
