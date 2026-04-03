@@ -1,9 +1,12 @@
+import logging
+
 from fastapi import APIRouter, HTTPException
 
 from apps.api.schemas import ProcessRequest, ProcessResponse
 from services.scraper.wikipedia import validate_wikipedia_url
 from services.pipeline.process_page import process_page
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -18,8 +21,10 @@ async def process_article(req: ProcessRequest):
     try:
         result = await process_page(req.url)
     except RuntimeError as e:
+        logger.exception("Pipeline runtime error for %s", req.url)
         raise HTTPException(status_code=502, detail=str(e))
     except Exception as e:
+        logger.exception("Pipeline failed for %s", req.url)
         raise HTTPException(status_code=502, detail=f"Pipeline failed: {e}")
 
     return ProcessResponse(

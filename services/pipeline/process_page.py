@@ -19,6 +19,8 @@ from lib.types.models import GeocodedTag, PlaceType, Relationship, ScrapedArticl
 from services.geocoder.geocode import geocode_tags
 from services.nlp.geotagger import extract_locations
 from services.scraper.wikipedia import scrape, url_hash as compute_hash
+from db.redis.cache import get_cached_geotags, set_cached_geotags
+from db.postgres.queries import get_article_by_hash, save_article
 
 logger = logging.getLogger(__name__)
 
@@ -119,9 +121,6 @@ async def process_page(url: str) -> PipelineResult:
     """
     Full pipeline: cache check → scrape → extract → geocode → persist → GeoJSON.
     """
-    from db.redis.cache import get_cached_geotags, set_cached_geotags
-    from db.postgres.queries import get_article_by_hash, save_article
-
     # Compute hash for cache lookup
     hash_val = compute_hash(url)
 
