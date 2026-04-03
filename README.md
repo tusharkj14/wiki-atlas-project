@@ -1,182 +1,174 @@
-# WikiMap
+<p align="center">
+  <img src="docs/logo.png" alt="WikiMap" width="80" />
+</p>
 
-**Visualize every location mentioned in any Wikipedia article on an interactive map.**
+<h1 align="center">WikiMap</h1>
 
-Paste a Wikipedia URL, and WikiMap scrapes the article, uses an LLM to extract every real-world location mentioned, geocodes them, and plots them on a Leaflet map — with context on *why* each place is relevant.
+<p align="center">
+  <strong>Visualize every location mentioned in any Wikipedia article on an interactive map.</strong>
+</p>
 
-![WikiMap Screenshot](docs/screenshot.png)
+<p align="center">
+  <a href="#demo">View Demo</a> &middot;
+  <a href="#getting-started">Get Started</a> &middot;
+  <a href="DEPLOYMENT.md">Deploy</a> &middot;
+  <a href="#contributing">Contribute</a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/python-3.12+-blue?logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/Next.js-14-black?logo=next.js" alt="Next.js" />
+  <img src="https://img.shields.io/badge/FastAPI-0.135+-009688?logo=fastapi&logoColor=white" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/Gemini-2.5_Flash-4285F4?logo=google&logoColor=white" alt="Gemini" />
+  <img src="https://img.shields.io/badge/license-MIT-green" alt="License" />
+</p>
+
+---
+
+<!-- Replace with actual screenshot/GIF -->
+<p align="center">
+  <img src="docs/demo.gif" alt="WikiMap Demo" width="700" />
+</p>
+
+## What is WikiMap?
+
+Paste a Wikipedia URL and get an interactive map of every real-world location mentioned in the article — with context on *why* each place is relevant.
+
+Wikipedia articles reference dozens of locations scattered through their text. WikiMap extracts them automatically using an LLM, geocodes them, and plots them on a map you can explore and share.
+
+## Demo
+
+> **Live demo:** [wikimap.vercel.app](https://wikimap.vercel.app) *(coming soon)*
+
+<!-- Remove this note once deployed -->
 
 ## How It Works
 
 ```
-Wikipedia URL
-     │
-     ▼
-┌─────────┐    ┌──────────┐    ┌───────────┐    ┌─────────┐
-│ Scraper  │ ─▶ │ Gemini   │ ─▶ │ Nominatim │ ─▶ │ GeoJSON │
-│ (BS4)   │    │ (LLM)    │    │ (Geocode) │    │  + Map  │
-└─────────┘    └──────────┘    └───────────┘    └─────────┘
+  Wikipedia URL
+       │
+       ▼
+ ┌───────────┐     ┌───────────┐     ┌───────────┐     ┌───────────┐
+ │  Scraper   │ ──▶ │  Gemini   │ ──▶ │ Nominatim │ ──▶ │  Leaflet  │
+ │ (BS4)      │     │  (LLM)    │     │ (Geocode) │     │   Map     │
+ └───────────┘     └───────────┘     └───────────┘     └───────────┘
+   Fetch &           Extract           Resolve           Render
+   parse HTML        locations         lat/lng            GeoJSON
 ```
 
-1. **Scrape** — Fetches the Wikipedia article via REST API, strips navigation/references, extracts clean paragraphs + infobox data
-2. **Extract** — Sends text to Gemini 2.5 Flash which returns structured JSON: place name, type, relationship to the article, and a reason sentence
-3. **Geocode** — Resolves each place to lat/lng via Nominatim with country-code biasing, concurrent staggered requests, and triple-layer caching (in-memory → Redis → API)
-4. **Display** — Returns a GeoJSON FeatureCollection rendered on a Leaflet map with interactive popups
+1. **Scrape** — Fetches the article via Wikipedia REST API, strips boilerplate, extracts paragraphs + infobox
+2. **Extract** — Gemini 2.5 Flash returns structured JSON: place name, type, relationship, reason
+3. **Geocode** — Nominatim resolves places to coordinates with country-code biasing and triple-layer caching
+4. **Display** — GeoJSON FeatureCollection rendered on a Leaflet map with interactive popups
 
-Results are cached in Redis (7-day TTL) — re-requesting the same article is instant.
-
-## Tech Stack
-
-| Layer       | Technology                              |
-|-------------|-----------------------------------------|
-| Frontend    | Next.js 14, React 18, Tailwind CSS      |
-| Map         | Leaflet + react-leaflet + OSM tiles      |
-| Backend API | FastAPI + Uvicorn (async)                |
-| LLM         | Gemini 2.5 Flash (structured JSON output)|
-| Geocoding   | Nominatim (OpenStreetMap)                |
-| Cache       | Redis 7 (geotag + geocode caching)      |
-| Database    | PostgreSQL 16 + PostGIS                  |
-| Language    | Python 3.12, TypeScript 5                |
+Cached in Redis — re-requesting the same article is instant.
 
 ## Features
 
-- Wikipedia search with autocomplete (OpenSearch API)
-- LLM-powered location extraction with disambiguation rules
-- Vague place name filtering ("North India", "Eastern Europe" etc.)
-- Geographic outlier detection (haversine distance from cluster median)
-- Country-code biased geocoding to prevent mis-resolution
-- Concurrent geocoding with rate limit compliance
-- Redis caching for instant repeat lookups
-- Shareable permalink for each processed article (`/map/{slug}`)
-- Recent searches sidebar (browser session storage)
-- Responsive UI with loading states
+- Wikipedia search with autocomplete
+- LLM-powered location extraction with structured output
+- Vague place name filtering ("North India", "Eastern Europe", etc.)
+- Geographic outlier detection via haversine distance
+- Country-biased geocoding to prevent mis-resolution
+- Concurrent geocoding with Nominatim rate limit compliance
+- Redis caching (7-day TTL) for instant repeat lookups
+- Shareable permalinks (`/map/{slug}`)
+- Recent searches sidebar (session storage)
+- Responsive design with loading states
 
-## Project Structure
+## Tech Stack
 
-```
-wiki-project/
-├── apps/
-│   ├── api/                    # FastAPI backend
-│   │   ├── main.py             # App factory, CORS, router includes
-│   │   ├── schemas.py          # Request/response Pydantic models
-│   │   └── routes/
-│   │       ├── health.py       # GET  /health
-│   │       ├── scraper.py      # POST /scrape, /scrape/preview
-│   │       ├── nlp.py          # POST /extract, /scrape-and-extract
-│   │       ├── pipeline.py     # POST /process (full pipeline)
-│   │       └── share.py        # GET  /article/{slug}
-│   └── web/                    # Next.js frontend
-│       └── src/
-│           ├── app/
-│           │   ├── page.tsx          # Home — search + map
-│           │   └── map/[slug]/       # Shareable article page
-│           ├── components/
-│           │   ├── MapView.tsx       # Leaflet map with markers
-│           │   ├── WikiSearchBar.tsx # Search input + autocomplete
-│           │   ├── SearchHistory.tsx # Recent searches sidebar
-│           │   ├── PinPopup.tsx      # Marker popup with context
-│           │   ├── ResultsHeader.tsx # Article metadata bar
-│           │   └── ShareButton.tsx   # Copy share link
-│           ├── hooks/
-│           │   ├── useProcessArticle.ts  # API call state machine
-│           │   └── useSearchHistory.ts   # Session storage hook
-│           └── lib/
-│               └── api.ts            # API client
-├── services/
-│   ├── scraper/wikipedia.py    # Wikipedia fetch + BeautifulSoup parse
-│   ├── nlp/geotagger.py        # Gemini structured extraction + vague filter
-│   ├── geocoder/geocode.py     # Nominatim + country bias + concurrent batch
-│   └── pipeline/process_page.py # Orchestrator + outlier detection
-├── db/
-│   ├── postgres/               # SQLAlchemy models, engine, queries
-│   └── redis/                  # Async Redis cache client
-├── lib/types/models.py         # Domain models (GeoTag, ScrapedArticle, etc.)
-├── docker-compose.yml          # Redis + PostgreSQL (dev)
-├── main.py                     # Entry point — launches Uvicorn
-└── pyproject.toml              # Python dependencies (uv)
-```
+| Layer       | Technology                                |
+|-------------|-------------------------------------------|
+| Frontend    | Next.js 14 &middot; React 18 &middot; Tailwind CSS |
+| Map         | Leaflet &middot; react-leaflet &middot; OpenStreetMap tiles |
+| Backend     | FastAPI &middot; Uvicorn (async)          |
+| LLM         | Gemini 2.5 Flash (structured JSON output) |
+| Geocoding   | Nominatim (OpenStreetMap)                 |
+| Cache       | Redis 7                                   |
+| Database    | PostgreSQL 16 &middot; PostGIS            |
+| Package Mgr | uv (Python) &middot; npm (Node)           |
 
 ## Getting Started
 
 ### Prerequisites
 
-- Python 3.12+
-- Node.js 18+
-- Docker (for Redis + PostgreSQL)
-- [uv](https://docs.astral.sh/uv/) package manager
-- A [Gemini API key](https://aistudio.google.com/apikey) (free)
+- **Python 3.12+** and [uv](https://docs.astral.sh/uv/)
+- **Node.js 18+** and npm
+- **Docker** (for Redis + PostgreSQL)
+- A free [Gemini API key](https://aistudio.google.com/apikey)
 
-### 1. Clone and configure
+### Setup
 
 ```bash
-git clone https://github.com/your-username/wiki-project.git
-cd wiki-project
+# Clone
+git clone https://github.com/your-username/wikimap.git
+cd wikimap
+
+# Environment variables
+cp .env.example .env
+# Edit .env → add your GEMINI_API_KEY
 ```
 
-Create a `.env` file in the project root:
+<details>
+<summary><strong>.env</strong> (project root)</summary>
 
 ```env
-GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_API_KEY=your_key_here
 DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/wikimap
 REDIS_URL=redis://localhost:6379/0
 ```
 
-Create `apps/web/.env.local`:
+</details>
+
+<details>
+<summary><strong>.env.local</strong> (apps/web/)</summary>
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
-### 2. Start infrastructure
+</details>
+
+### Run
 
 ```bash
+# 1. Start Redis + PostgreSQL
 docker compose up -d
-```
 
-This starts Redis (port 6379) and PostgreSQL/PostGIS (port 5432).
+# 2. Start backend (terminal 1)
+uv sync
+uv run python main.py          # → http://localhost:8000
 
-### 3. Start the backend
-
-```bash
-uv sync          # install Python dependencies
-uv run python main.py   # starts FastAPI on http://localhost:8000
-```
-
-### 4. Start the frontend
-
-```bash
+# 3. Start frontend (terminal 2)
 cd apps/web
 npm install
-npm run dev      # starts Next.js on http://localhost:3000
+npm run dev                     # → http://localhost:3000
 ```
 
-Open http://localhost:3000 and paste a Wikipedia URL.
-
-### One-command start (backend + infra)
+Or use the one-command scripts (starts infra + backend):
 
 ```bash
-# macOS/Linux
-./start.sh
-
-# Windows
-.\start.ps1
+./start.sh        # macOS / Linux
+.\start.ps1       # Windows
 ```
 
-> These scripts start Docker, wait for services to be healthy, then launch the FastAPI server. The frontend still needs to be started separately.
+Open **http://localhost:3000** and paste any Wikipedia URL.
 
-## API Endpoints
+## API
 
-| Method | Endpoint              | Description                                     |
-|--------|-----------------------|-------------------------------------------------|
-| GET    | `/health`             | Health check                                    |
-| POST   | `/scrape`             | Scrape a Wikipedia article                      |
-| POST   | `/scrape/preview`     | First 3 paragraphs of an article                |
-| POST   | `/extract`            | Extract locations from text via LLM             |
-| POST   | `/scrape-and-extract` | Scrape + extract in one call                    |
-| POST   | `/process`            | **Full pipeline** — scrape, extract, geocode, return GeoJSON |
-| GET    | `/article/{slug}`     | Retrieve a previously processed article by share slug |
+| Method | Endpoint                | Description                          |
+|--------|-------------------------|--------------------------------------|
+| `GET`  | `/health`               | Health check                         |
+| `POST` | `/process`              | Full pipeline — scrape, extract, geocode, return GeoJSON |
+| `POST` | `/scrape`               | Scrape a Wikipedia article           |
+| `POST` | `/scrape/preview`       | First 3 paragraphs preview           |
+| `POST` | `/extract`              | Extract locations from text via LLM  |
+| `POST` | `/scrape-and-extract`   | Scrape + extract in one call         |
+| `GET`  | `/article/{slug}`       | Retrieve processed article by share slug |
 
-### Example
+<details>
+<summary><strong>Example request</strong></summary>
 
 ```bash
 curl -X POST http://localhost:8000/process \
@@ -184,30 +176,72 @@ curl -X POST http://localhost:8000/process \
   -d '{"url": "https://en.wikipedia.org/wiki/Battle_of_Waterloo"}'
 ```
 
-Response includes a GeoJSON FeatureCollection with all extracted locations.
+Returns a GeoJSON FeatureCollection with all extracted locations, metadata, and a shareable slug.
+
+</details>
+
+## Project Structure
+
+```
+wikimap/
+├── apps/
+│   ├── api/                        # FastAPI backend
+│   │   ├── main.py                 # App factory, CORS, routers
+│   │   ├── schemas.py              # Pydantic request/response models
+│   │   └── routes/                 # Endpoint handlers
+│   └── web/                        # Next.js frontend
+│       └── src/
+│           ├── app/                # Pages (home, /map/[slug])
+│           ├── components/         # MapView, SearchBar, Sidebar, etc.
+│           ├── hooks/              # useProcessArticle, useSearchHistory
+│           └── lib/api.ts          # API client
+├── services/
+│   ├── scraper/wikipedia.py        # Wikipedia fetch + BS4 parse
+│   ├── nlp/geotagger.py            # Gemini extraction + vague filter
+│   ├── geocoder/geocode.py         # Nominatim + country bias + concurrency
+│   └── pipeline/process_page.py    # Orchestrator + outlier detection
+├── db/
+│   ├── postgres/                   # SQLAlchemy models + queries
+│   └── redis/                      # Async cache client
+├── lib/types/models.py             # Domain models
+├── docker-compose.yml              # Dev infrastructure
+├── main.py                         # Entry point
+└── pyproject.toml                  # Python dependencies
+```
 
 ## Deployment
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for full deployment instructions, including:
+See **[DEPLOYMENT.md](DEPLOYMENT.md)** for production deployment, including:
 
-- Dockerfiles for production builds
-- Docker Compose production config
-- **Free-tier hosting** (Vercel + Render + Neon + Upstash = $0/mo)
-- VPS deployment with Oracle Cloud Always Free
-- Nginx/Caddy reverse proxy setup
-- CI/CD pipeline with GitHub Actions
+- Docker images and production Compose config
+- **Free-tier hosting** — Vercel + Render + Neon + Upstash ($0/mo)
+- VPS deployment (Oracle Cloud Always Free)
+- Reverse proxy setup (Nginx / Caddy)
+- CI/CD with GitHub Actions
+- Monitoring and backup strategies
 
 ## Architecture Decisions
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| Frontend framework | Next.js over Streamlit | First-class map support, shareable URLs, SSR |
-| LLM provider | Gemini 2.5 Flash | Free tier, native structured JSON output |
-| Geocoder | Nominatim | Free, no API key needed for MVP |
-| Database | PostgreSQL + PostGIS | Spatial queries, free managed options |
-| Cache | Redis | TTL-native, fast, simple key-value caching |
-| Package manager | uv | Fast, lockfile support, Python 3.12+ |
+| Decision    | Choice                  | Why                                            |
+|-------------|-------------------------|------------------------------------------------|
+| Frontend    | Next.js over Streamlit  | First-class maps, shareable URLs, SSR          |
+| LLM         | Gemini 2.5 Flash        | Free, native structured JSON output            |
+| Geocoder    | Nominatim               | Free, no API key, sufficient for MVP           |
+| Database    | PostgreSQL + PostGIS    | Spatial queries, great free managed tiers      |
+| Cache       | Redis                   | TTL-native, simple, fast                       |
+| Python pkgs | uv                      | Fast installs, lockfile, Python 3.12+          |
+
+## Contributing
+
+Contributions are welcome! Please:
+
+1. Fork the repo
+2. Create a feature branch (`git checkout -b feat/your-feature`)
+3. Commit your changes
+4. Push and open a Pull Request
+
+For bugs or feature requests, [open an issue](../../issues).
 
 ## License
 
-MIT
+[MIT](LICENSE)
