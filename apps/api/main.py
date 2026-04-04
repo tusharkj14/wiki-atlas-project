@@ -34,9 +34,13 @@ async def lifespan(app: FastAPI):
         logger.warning("PostgreSQL not available: %s", e)
 
     try:
-        r = await get_redis()
+        r = get_redis()
         if r:
-            await r.ping()
+            from db.redis.cache import _is_upstash
+            if _is_upstash:
+                r.ping()
+            else:
+                await r.ping()
             logger.info("Redis connected")
         else:
             logger.info("Redis not configured (REDIS_URL not set)")
