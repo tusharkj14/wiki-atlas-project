@@ -32,22 +32,22 @@ export default async function SlugPage({ params }: Props) {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
-      <header className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200 shadow-sm flex-shrink-0">
-        <div className="flex items-center gap-3 min-w-0">
+      <header className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 bg-white border-b border-gray-200 shadow-sm flex-shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <a href="/" className="flex items-center gap-2 flex-shrink-0">
             <span className="text-xl" aria-hidden>🌍</span>
-            <span className="font-bold text-gray-900 text-lg tracking-tight">WikiAtlas</span>
+            <span className="font-bold text-gray-900 text-lg tracking-tight hidden sm:inline">WikiAtlas</span>
           </a>
           <span className="text-gray-200 hidden sm:inline">|</span>
           <a
             href={data.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="font-semibold text-gray-800 hover:underline truncate hidden sm:inline"
+            className="font-semibold text-gray-800 hover:underline truncate text-sm sm:text-base"
           >
             {data.title}
           </a>
-          <span className="text-sm text-gray-500 whitespace-nowrap flex-shrink-0 hidden sm:inline">
+          <span className="text-xs sm:text-sm text-gray-500 whitespace-nowrap flex-shrink-0 hidden sm:inline">
             {data.total_geocoded} of {data.total_extracted} locations
           </span>
         </div>
@@ -55,7 +55,7 @@ export default async function SlugPage({ params }: Props) {
           href={data.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors flex-shrink-0 ml-3"
+          className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors flex-shrink-0 ml-2 sm:ml-3"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -71,7 +71,8 @@ export default async function SlugPage({ params }: Props) {
               d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
             />
           </svg>
-          Open in Wikipedia
+          <span className="hidden sm:inline">Open in Wikipedia</span>
+          <span className="sm:hidden">Wiki</span>
         </a>
       </header>
 

@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   title: 'WikiAtlas — Visualize Wikipedia on a map',
   description:
     'Search any Wikipedia article and see every mentioned location plotted on an interactive map.',
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

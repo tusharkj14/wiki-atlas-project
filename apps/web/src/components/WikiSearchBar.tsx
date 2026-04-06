@@ -102,7 +102,7 @@ export default function WikiSearchBar({ onSubmit, disabled }: Props) {
   }
 
   return (
-    <div className="relative w-full max-w-xl">
+    <div className="relative w-full max-w-xl min-w-0">
       <div className="flex items-center bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <span className="pl-3 text-gray-400">
           <svg
