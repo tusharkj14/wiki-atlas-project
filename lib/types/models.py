@@ -36,6 +36,7 @@ class GeoTag(BaseModel):
     reason: str
     source_sentence: str
     country: str = ""
+    city: str = ""
 
 
 class GeocodedTag(BaseModel):
@@ -46,6 +47,7 @@ class GeocodedTag(BaseModel):
     reason: str
     source_sentence: str
     country: str = ""
+    city: str = ""
     lat: float | None = None
     lng: float | None = None
     geocoder: str | None = None

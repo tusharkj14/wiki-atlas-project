@@ -9,6 +9,8 @@ from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from db.postgres.models import Base
+
 load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL", "")
@@ -55,7 +57,6 @@ async def init_db():
     """Create all tables if they don't exist."""
     if engine is None:
         return
-    from db.postgres.models import Base
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

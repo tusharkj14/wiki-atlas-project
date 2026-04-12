@@ -1,5 +1,6 @@
 import type { ProcessResult } from '@/lib/types'
 import ShareButton from './ShareButton'
+import ExportButton from './ExportButton'
 
 interface Props {
   result: ProcessResult
@@ -28,7 +29,10 @@ export default function ResultsHeader({ result }: Props) {
           </span>
         )}
       </div>
-      {share_slug && <ShareButton slug={share_slug} />}
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <ExportButton geojson={result.geojson} title={title} />
+        {share_slug && <ShareButton slug={share_slug} />}
+      </div>
     </div>
   )
 }

@@ -13,7 +13,10 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from apps.api.routes import health, scraper, nlp, pipeline, share
+from apps.api.routes import health, jobs, main_page, nlp, pipeline, scraper, share
+from db.postgres.engine import close_db, init_db
+from db.redis.cache import _is_upstash, close_redis, get_redis
+from db.redis.landing_cache import close_landing_redis, get_landing_redis
 
 load_dotenv()
 
@@ -24,9 +27,6 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # ── Startup ─────────────────────────────────────────────────────
-    from db.postgres.engine import init_db
-    from db.redis.cache import get_redis
-
     try:
         await init_db()
         logger.info("PostgreSQL initialised")
@@ -36,7 +36,6 @@ async def lifespan(app: FastAPI):
     try:
         r = get_redis()
         if r:
-            from db.redis.cache import _is_upstash
             if _is_upstash:
                 r.ping()
             else:
@@ -47,12 +46,18 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning("Redis not available: %s", e)
 
+    # Landing page Redis (separate DB)
+    try:
+        lr = get_landing_redis()
+        if lr:
+            logger.info("Landing Redis connected")
+    except Exception as e:
+        logger.warning("Landing Redis not available: %s", e)
+
     yield
 
     # ── Shutdown ────────────────────────────────────────────────────
-    from db.postgres.engine import close_db
-    from db.redis.cache import close_redis
-
+    await close_landing_redis()
     await close_redis()
     await close_db()
     logger.info("Connections closed")
@@ -82,6 +87,8 @@ def create_app() -> FastAPI:
     app.include_router(nlp.router)
     app.include_router(pipeline.router)
     app.include_router(share.router)
+    app.include_router(main_page.router)
+    app.include_router(jobs.router)
 
     return app
 

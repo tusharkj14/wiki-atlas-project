@@ -54,15 +54,17 @@ def _country_to_code(country: str) -> Optional[str]:
     return _COUNTRY_CODES.get(country.strip().lower())
 
 
-async def geocode_place(place_name: str, country: str = "") -> Optional[tuple[float, float]]:
+async def geocode_place(
+    place_name: str, country: str = "", city: str = "",
+) -> Optional[tuple[float, float]]:
     """
     Resolve a single place name to (lat, lng) via Nominatim.
 
     Checks Redis cache first, then in-memory cache, then Nominatim.
-    Uses country hint for disambiguation when available.
+    Uses city + country context in the query for disambiguation.
     Returns None if the place cannot be geocoded.
     """
-    cache_key = f"{place_name}||{country}" if country else place_name
+    cache_key = f"{place_name}||{city}||{country}" if (city or country) else place_name
 
     # 1. In-memory cache (process-local)
     if cache_key in _geocode_cache:
@@ -75,15 +77,23 @@ async def geocode_place(place_name: str, country: str = "") -> Optional[tuple[fl
         _geocode_cache[cache_key] = redis_result
         return redis_result
 
-    # 3. Nominatim lookup
+    # 3. Build Nominatim query with city/country context
+    #    e.g. "Agara, Bangalore, India" instead of just "Agara"
+    query_parts = [place_name]
+    if city and city.lower() != place_name.lower():
+        query_parts.append(city)
+    if country and country.lower() != place_name.lower():
+        query_parts.append(country)
+    query = ", ".join(query_parts)
+
     params: dict[str, str | int] = {
-        "q": place_name,
+        "q": query,
         "format": "jsonv2",
         "limit": 1,
         "email": "wikiatlas-project@example.com",
     }
 
-    # Bias results to the expected country
+    # Also bias results to the expected country
     country_code = _country_to_code(country)
     if country_code:
         params["countrycodes"] = country_code
@@ -97,7 +107,7 @@ async def geocode_place(place_name: str, country: str = "") -> Optional[tuple[fl
         results = resp.json()
 
     if not results:
-        logger.debug("No geocode result for: %s (country=%s)", place_name, country)
+        logger.debug("No geocode result for: %s (query=%s)", place_name, query)
         _geocode_cache[cache_key] = None
         await set_cached_geocode_miss(cache_key)
         return None
@@ -121,18 +131,18 @@ async def geocode_tags(tags: list[GeoTag]) -> list[GeocodedTag]:
     # 1. De-duplicate: group tags by cache key, only geocode each unique place once
     from collections import OrderedDict
 
-    unique: OrderedDict[str, tuple[str, str]] = OrderedDict()  # cache_key → (place_name, country)
+    unique: OrderedDict[str, tuple[str, str, str]] = OrderedDict()  # cache_key → (place_name, country, city)
     for tag in tags:
-        cache_key = f"{tag.place_name}||{tag.country}" if tag.country else tag.place_name
+        cache_key = f"{tag.place_name}||{tag.city}||{tag.country}" if (tag.city or tag.country) else tag.place_name
         if cache_key not in unique:
-            unique[cache_key] = (tag.place_name, tag.country)
+            unique[cache_key] = (tag.place_name, tag.country, tag.city)
 
     # 2. Separate cached hits from places that need Nominatim calls
     from db.redis.cache import get_cached_geocode
     cached_results: dict[str, Optional[tuple[float, float]]] = {}
-    uncached: list[tuple[str, str, str]] = []  # (cache_key, place_name, country)
+    uncached: list[tuple[str, str, str, str]] = []  # (cache_key, place_name, country, city)
 
-    for cache_key, (place_name, country) in unique.items():
+    for cache_key, (place_name, country, city) in unique.items():
         # Check in-memory cache
         if cache_key in _geocode_cache:
             cached_results[cache_key] = _geocode_cache[cache_key]
@@ -143,7 +153,7 @@ async def geocode_tags(tags: list[GeoTag]) -> list[GeocodedTag]:
             _geocode_cache[cache_key] = redis_result
             cached_results[cache_key] = redis_result
             continue
-        uncached.append((cache_key, place_name, country))
+        uncached.append((cache_key, place_name, country, city))
 
     logger.info(
         "Geocoding: %d unique places (%d cached, %d need Nominatim)",
@@ -152,17 +162,17 @@ async def geocode_tags(tags: list[GeoTag]) -> list[GeocodedTag]:
 
     # 3. Fire Nominatim requests concurrently with staggered 1-second starts
     async def _staggered_geocode(
-        index: int, cache_key: str, place_name: str, country: str,
+        index: int, cache_key: str, place_name: str, country: str, city: str,
     ) -> tuple[str, Optional[tuple[float, float]]]:
         """Wait index seconds, then fire the request."""
         await asyncio.sleep(index)  # stagger: 0s, 1s, 2s, ...
-        coords = await geocode_place(place_name, country)
+        coords = await geocode_place(place_name, country, city)
         return cache_key, coords
 
     if uncached:
         tasks = [
-            _staggered_geocode(i, ck, pn, co)
-            for i, (ck, pn, co) in enumerate(uncached)
+            _staggered_geocode(i, ck, pn, co, ci)
+            for i, (ck, pn, co, ci) in enumerate(uncached)
         ]
         nominatim_results = await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -176,7 +186,7 @@ async def geocode_tags(tags: list[GeoTag]) -> list[GeocodedTag]:
     # 4. Build final results in original tag order
     results: list[GeocodedTag] = []
     for tag in tags:
-        cache_key = f"{tag.place_name}||{tag.country}" if tag.country else tag.place_name
+        cache_key = f"{tag.place_name}||{tag.city}||{tag.country}" if (tag.city or tag.country) else tag.place_name
         coords = cached_results.get(cache_key)
         results.append(
             GeocodedTag(
@@ -186,6 +196,7 @@ async def geocode_tags(tags: list[GeoTag]) -> list[GeocodedTag]:
                 reason=tag.reason,
                 source_sentence=tag.source_sentence,
                 country=tag.country,
+                city=tag.city,
                 lat=coords[0] if coords else None,
                 lng=coords[1] if coords else None,
                 geocoder="nominatim" if coords else None,

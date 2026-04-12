@@ -11,7 +11,9 @@ import logging
 import os
 from typing import Optional
 
+import redis.asyncio as aioredis
 from dotenv import load_dotenv
+from upstash_redis import Redis
 
 load_dotenv()
 
@@ -35,7 +37,6 @@ def get_redis():
     upstash_token = os.getenv("UPSTASH_REDIS_REST_TOKEN")
 
     if upstash_url and upstash_token:
-        from upstash_redis import Redis
         _redis = Redis(url=upstash_url, token=upstash_token)
         _is_upstash = True
         logger.info("Using Upstash Redis (REST)")
@@ -44,7 +45,6 @@ def get_redis():
     # ── Fallback: standard Redis ───────────────────
     redis_url = os.getenv("REDIS_URL")
     if redis_url:
-        import redis.asyncio as aioredis
         _redis = aioredis.from_url(redis_url, decode_responses=True)
         _is_upstash = False
         logger.info("Using standard Redis (TCP)")

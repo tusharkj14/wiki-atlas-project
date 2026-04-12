@@ -1,9 +1,33 @@
+import httpx
 from fastapi import APIRouter, HTTPException
 
 from apps.api.schemas import ScrapeRequest, ScrapeResponse, PreviewResponse
 from services.scraper.wikipedia import scrape, validate_wikipedia_url
 
 router = APIRouter()
+
+
+@router.get("/random")
+async def random_article():
+    """Return a random Wikipedia article URL via the Wikipedia API."""
+    async with httpx.AsyncClient(
+        headers={"User-Agent": "WikiAtlas/1.0 (educational project; contact@example.com)"},
+        timeout=10.0,
+    ) as client:
+        resp = await client.get(
+            "https://en.wikipedia.org/w/api.php",
+            params={
+                "action": "query",
+                "list": "random",
+                "rnnamespace": 0,
+                "rnlimit": 1,
+                "format": "json",
+            },
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        title = data["query"]["random"][0]["title"]
+        return {"url": f"https://en.wikipedia.org/wiki/{title.replace(' ', '_')}"}
 
 
 @router.post("/scrape", response_model=ScrapeResponse)
