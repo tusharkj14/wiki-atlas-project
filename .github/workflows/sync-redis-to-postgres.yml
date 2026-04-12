@@ -1,0 +1,16 @@
+name: Sync Redis to PostgreSQL
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'  # every 30 minutes
+  workflow_dispatch: # allow manual trigger from GitHub UI
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger sync endpoint
+        run: |
+          curl -sf -X POST "${{ secrets.API_BASE_URL }}/jobs/sync" \
+            --max-time 30 \
+            || echo "Sync request failed (server may be sleeping)"
