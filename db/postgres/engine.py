@@ -41,7 +41,13 @@ def _prepare_engine_args(url: str) -> tuple[str, dict]:
 _clean_url, _connect_args = _prepare_engine_args(DATABASE_URL)
 
 engine = (
-    create_async_engine(_clean_url, echo=False, connect_args=_connect_args)
+    create_async_engine(
+        _clean_url,
+        echo=False,
+        connect_args=_connect_args,
+        pool_pre_ping=True,
+        pool_recycle=300,
+    )
     if _clean_url
     else None
 )
