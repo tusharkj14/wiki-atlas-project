@@ -38,7 +38,7 @@ Wikipedia articles reference dozens of locations scattered through their text. W
 
 ## Demo
 
-> **Live demo:** [wikiatlas.vercel.app](https://wikiatlas.vercel.app) *(coming soon)*
+> **Live demo:** [wikiatlas.vercel.app](https://wikiatlas.vercel.app) 
 
 <!-- Remove this note once deployed -->
 
