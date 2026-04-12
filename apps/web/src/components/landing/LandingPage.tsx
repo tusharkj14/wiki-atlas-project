@@ -31,93 +31,99 @@ export default function LandingPage() {
     setActiveItemIndex(index)
   }, [])
 
-  return (
-    <div className="flex-1 flex overflow-hidden relative">
-      {/* Side panel */}
-      <div
-        className={`flex-shrink-0 bg-white border-r border-gray-200 flex flex-col transition-all duration-300 z-10 ${
-          panelOpen ? 'w-80 sm:w-96' : 'w-0'
-        } overflow-hidden`}
-      >
-        {/* Tabs */}
-        <div className="flex border-b border-gray-200 flex-shrink-0">
-          {TABS.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => handleTabChange(tab.key)}
-              className={`flex-1 px-2 py-2.5 text-xs sm:text-sm font-medium transition-colors relative ${
-                activeTab === tab.key
-                  ? 'text-blue-600'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <span className="mr-1">{tab.icon}</span>
-              <span className="hidden sm:inline">{tab.label}</span>
-              <span className="sm:hidden">{tab.label.split(' ').pop()}</span>
-              {activeTab === tab.key && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />
-              )}
-            </button>
-          ))}
-        </div>
-
-        {/* Section header */}
-        <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-gray-700">
-              {TABS.find((t) => t.key === activeTab)?.label}
-            </h3>
-            {status === 'success' && data && (
-              <span className="text-xs text-gray-400">
-                {data.total_items} items &middot; {data.total_geocoded} pins
-              </span>
+  const panelContent = (
+    <>
+      {/* Tabs */}
+      <div className="flex border-b border-gray-200 flex-shrink-0">
+        {TABS.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => handleTabChange(tab.key)}
+            className={`flex-1 px-2 py-2.5 text-xs sm:text-sm font-medium transition-colors relative ${
+              activeTab === tab.key
+                ? 'text-blue-600'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <span className="mr-1">{tab.icon}</span>
+            {tab.label}
+            {activeTab === tab.key && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />
             )}
-          </div>
-          <p className="text-xs text-gray-400 mt-0.5">
-            From Wikipedia&apos;s main page
-          </p>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-hidden">
-          {status === 'loading' && (
-            <div className="flex flex-col items-center justify-center h-full gap-3">
-              <div className="h-8 w-8 border-[3px] border-gray-200 border-t-blue-600 rounded-full animate-spin" />
-              <p className="text-sm text-gray-500">Loading section...</p>
-              <p className="text-xs text-gray-400">
-                Extracting locations from Wikipedia&apos;s main page
-              </p>
-            </div>
-          )}
-
-          {status === 'error' && (
-            <div className="flex flex-col items-center justify-center h-full gap-3 px-4">
-              <p className="text-sm text-red-600 text-center">{error}</p>
-              <button
-                onClick={retry}
-                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Retry
-              </button>
-            </div>
-          )}
-
-          {status === 'success' && data && (
-            <SectionPanel
-              items={items}
-              features={features}
-              activeIndex={activeItemIndex}
-              onItemSelect={handleItemSelect}
-              section={activeTab}
-            />
-          )}
-        </div>
+          </button>
+        ))}
       </div>
 
-      {/* Panel toggle — sits inside the map area, left edge */}
+      {/* Section header */}
+      <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100 flex-shrink-0">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-gray-700">
+            {TABS.find((t) => t.key === activeTab)?.label}
+          </h3>
+          {status === 'success' && data && (
+            <span className="text-xs text-gray-400">
+              {data.total_items} items &middot; {data.total_geocoded} pins
+            </span>
+          )}
+        </div>
+        <p className="text-xs text-gray-400 mt-0.5">
+          From Wikipedia&apos;s main page
+        </p>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto">
+        {status === 'loading' && (
+          <div className="flex flex-col items-center justify-center h-full min-h-[120px] gap-3">
+            <div className="h-8 w-8 border-[3px] border-gray-200 border-t-blue-600 rounded-full animate-spin" />
+            <p className="text-sm text-gray-500">Loading section...</p>
+            <p className="text-xs text-gray-400">
+              Extracting locations from Wikipedia&apos;s main page
+            </p>
+          </div>
+        )}
+
+        {status === 'error' && (
+          <div className="flex flex-col items-center justify-center h-full min-h-[120px] gap-3 px-4">
+            <p className="text-sm text-red-600 text-center">{error}</p>
+            <button
+              onClick={retry}
+              className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {status === 'success' && data && (
+          <SectionPanel
+            items={items}
+            features={features}
+            activeIndex={activeItemIndex}
+            onItemSelect={handleItemSelect}
+            section={activeTab}
+          />
+        )}
+      </div>
+    </>
+  )
+
+  return (
+    <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+      {/* Desktop side panel */}
+      <div
+        className={`hidden md:flex flex-shrink-0 bg-white border-r border-gray-200 flex-col transition-all duration-300 z-10 ${
+          panelOpen ? 'w-96' : 'w-0'
+        } overflow-hidden`}
+      >
+        {panelContent}
+      </div>
+
+      {/* Desktop panel toggle */}
       <button
         onClick={() => setPanelOpen((prev) => !prev)}
-        className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-white border border-gray-200 rounded-r-lg shadow-md px-1 py-3 hover:bg-gray-50 transition-all"
+        className="hidden md:block absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-white border border-gray-200 rounded-r-lg shadow-md px-1 py-3 hover:bg-gray-50 transition-all"
+        style={panelOpen ? { left: '24rem' } : undefined}
         aria-label={panelOpen ? 'Close panel' : 'Open panel'}
       >
         <svg
@@ -131,8 +137,8 @@ export default function LandingPage() {
         </svg>
       </button>
 
-      {/* Map */}
-      <div className="flex-1 relative">
+      {/* Map — full height on mobile, flex on desktop */}
+      <div className="flex-1 relative min-h-[40vh] md:min-h-0">
         <LandingMap features={features} activeIndex={activeItemIndex} />
         {status === 'loading' && (
           <div className="absolute inset-0 z-[999] flex items-center justify-center bg-white/60 backdrop-blur-[2px] pointer-events-none">
@@ -143,6 +149,23 @@ export default function LandingPage() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Mobile bottom sheet */}
+      <div
+        className={`md:hidden bg-white border-t border-gray-200 flex flex-col transition-all duration-300 z-10 ${
+          panelOpen ? 'h-[45vh]' : 'h-10'
+        } overflow-hidden`}
+      >
+        {/* Mobile drag handle / toggle */}
+        <button
+          onClick={() => setPanelOpen((prev) => !prev)}
+          className="flex-shrink-0 flex items-center justify-center py-2 hover:bg-gray-50"
+          aria-label={panelOpen ? 'Collapse panel' : 'Expand panel'}
+        >
+          <div className="w-8 h-1 bg-gray-300 rounded-full" />
+        </button>
+        {panelContent}
       </div>
     </div>
   )

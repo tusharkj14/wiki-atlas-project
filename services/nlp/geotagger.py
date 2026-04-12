@@ -33,7 +33,7 @@ For each location return a JSON object with:
   reason          : one sentence explaining relevance to the article subject
   source_sentence : the exact sentence from the article mentioning this place
   country         : the country this location is in (use modern country names, e.g. "India", "Turkey"). For countries themselves, repeat the country name. This field is critical for disambiguation during geocoding.
-  city            : the nearest major city this location is in or near (e.g. "Bangalore", "London", "Tokyo"). For cities themselves, repeat the city name. For countries or large regions, leave as empty string "". This field is critical for geocoding accuracy of local places like neighborhoods, roads, and suburbs.
+  city            : the nearest major city this location is in or near (e.g. "Bangalore", "London", "Tokyo"). For cities themselves, repeat the city name. For regions and historical areas, provide the nearest well-known modern city (e.g. "Gandhara" → city: "Peshawar", "Kashmir" → city: "Srinagar", "Tuscany" → city: "Florence"). For countries, leave as empty string "". This field is critical for geocoding accuracy.
 
 IMPORTANT DISAMBIGUATION RULES:
 - Always interpret place names in the context of the article's subject.
@@ -158,11 +158,24 @@ async def _extract_groq(text: str, title: str) -> list[GeoTag]:
 
     print(f"Groq raw response: {raw}")
 
-    # Groq may return {"locations": [...]} or just [...]
+    # Groq may return {"locations": [...]}, just [...], or a single {...} object
     if isinstance(raw, dict):
-        raw = raw.get("locations", raw.get("results", list(raw.values())[0]))
+        # Check if it's a wrapper like {"locations": [...]}
+        for key in ("locations", "results", "places", "data"):
+            if key in raw and isinstance(raw[key], list):
+                raw = raw[key]
+                break
+        else:
+            # It's a single location object (has place_name), wrap it in a list
+            if "place_name" in raw:
+                raw = [raw]
+            else:
+                raw = list(raw.values())[0] if raw else []
     if not isinstance(raw, list):
         raise ValueError(f"Unexpected Groq response shape: {type(raw)}")
+
+    # Filter out empty or incomplete dicts (Groq sometimes emits {} entries)
+    raw = [item for item in raw if isinstance(item, dict) and item.get("place_name")]
 
     return [GeoTag(**_normalize_tag(item)) for item in raw]
 
